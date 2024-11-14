@@ -18,13 +18,18 @@ def inCache(domain):
     return False
 
 def resolve(domain, parent_ip, parent_port, client_addr, sock):
+    print(f"Resolving domain: {domain} with parent server {parent_ip}:{parent_port}...")
     print(f"Attempting to resolve domain: {domain}")
     
-    if inCache(domain):
+    if inCache(domain) and not cache[domain].endswith('NS'):
         response = cache[domain]
         print(f"Cache is valid. Returning cached response: {response}")
         sock.sendto(response.encode(), client_addr)
         return
+    if inCache(domain) and cache[domain].endswith('NS'):
+        response = cache[domain]
+        parent_ip=cache[domain].split(",")[1].split(":")[0]
+        parent_port=int(cache[domain].split(",")[1].split(":")[1])
     
     print(f"Domain {domain} not in cache or cache expired. Querying parent server...")
     
@@ -38,7 +43,7 @@ def resolve(domain, parent_ip, parent_port, client_addr, sock):
             response = data.decode()
             print(f"Received response from parent server: {response}")
             if ',' in response:
-                cache[domain] = response.split(",")[1]
+                cache[domain] = response
                 cache_time[domain] = time.time()
             else:
                 sock.sendto(response.encode(), client_addr)
@@ -47,9 +52,10 @@ def resolve(domain, parent_ip, parent_port, client_addr, sock):
 
             if response.endswith('NS'):
                 ns_info = response.split(",")
-                ns_ip, ns_domain = ns_info[1].split(":")
+                ns_domain = ns_info[0]
+                ns_ip, ns_port = ns_info[1].split(":")
                 print(f"Response is a referral. Resolving nameserver {ns_domain}...")
-                resolve(ns_domain, ns_ip, ns_domain, client_addr, sock)
+                resolve(domain, ns_ip,ns_port, client_addr, sock)
             else:
                 sock.sendto(response.encode(), client_addr)
 
@@ -69,7 +75,6 @@ def main():
 
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.bind(('', my_port))
-
         print(f"Resolver listening on port {my_port}...")
 
         while True:
