@@ -7,7 +7,7 @@ cache_time = {}
 cache_timeout = 0
 
 def inCache(domain):
-    if domain in cache:
+    if domain in cache and domain in cache_time:
         print(f"Domain {domain} found in cache. Checking cache validity...")
         if time.time() - cache_time[domain] < cache_timeout:
             print(f"Cache is valid. Returning cached response: {cache[domain]}")
@@ -37,9 +37,11 @@ def resolve(domain, parent_ip, parent_port, client_addr, sock):
             data, _ = parent_sock.recvfrom(1024)
             response = data.decode()
             print(f"Received response from parent server: {response}")
-
-            cache[domain] = response.split(",")[1]
-            cache_time[domain] = time.time()
+            if ',' in response:
+                cache[domain] = response.split(",")[1]
+                cache_time[domain] = time.time()
+            else:
+                sock.sendto(response.encode(), client_addr)
 
             print(f"Cached response for {domain}: {response}")
 

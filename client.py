@@ -7,9 +7,9 @@ def main():
     server_port = int(sys.argv[2])
 
     # Create a UDP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     while True:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # Take user input
         data = input("Enter message to send: ")
         
