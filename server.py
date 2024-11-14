@@ -3,26 +3,27 @@ import sys
 
 def lookup_in_zone_file(domain, zone_file):
     print(f"Looking up domain '{domain}' in zone file '{zone_file}'...")
-    
-    # Open the zone file and search for the domain
-    try:
-        with open(zone_file, 'r') as file:
+    with open(zone_file, 'r') as file:
             for line in file:
                 # Split each line into domain, IP, and classification
                 parts = line.strip().split(',')
-                
                 print(f"Processing line: {line.strip()}")
-
                 if len(parts) == 3:
                     file_domain, ip_address, classification = parts
                     if file_domain == domain:
                         print(f"Found domain {domain} with IP address {ip_address}")
                         return ip_address  # Return the IP address if found
-        print(f"Domain {domain} not found in zone file.")
-        return None  # Return None if domain is not found
-    except FileNotFoundError:
-        print(f"Error: Zone file '{zone_file}' not found.")
-        return None
+    with open(zone_file, 'r') as file:
+            for line in file:
+                # Split each line into domain, IP, and classification
+                parts = line.strip().split(',')
+                print(f"Processing line: {line.strip()}")
+                if len(parts) == 3:
+                    file_domain, ip_address, classification = parts
+                    if domain.endswith(file_domain):
+                        print(f"Found NS domain {domain} with IP address {ip_address}")
+                        return ip_address  # Return the IP address if found
+    print(f"Domain {domain} not found in zone file.")
 
 def main(myPort, zoneFileName):
     print(f"Starting server on port {myPort} with zone file '{zoneFileName}'...")
@@ -48,7 +49,7 @@ def main(myPort, zoneFileName):
         
         s.sendto(response.encode(), addr)  # Send back the response
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     # Check if the correct number of arguments is passed
     if len(sys.argv) != 3:
         print("Usage: python server.py [myPort] [zoneFileName]")
